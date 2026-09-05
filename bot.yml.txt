@@ -1,0 +1,31 @@
+name: Oyaki Senpai
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    # Fires every 5h50m so a fresh run picks up right before the old one's
+    # 6-hour GitHub Actions job limit forces it to stop — this is what keeps
+    # the bot online continuously without any third-party host.
+    - cron: "50 */5 * * *"
+
+concurrency:
+  group: oyaki-senpai-bot
+  cancel-in-progress: false
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350 # 5h50m — self-stops just before the 6h hard limit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run bot
+        env:
+          APP_TOKEN: ${{ secrets.APP_TOKEN }}
+        run: python main.py
